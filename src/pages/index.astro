@@ -50,35 +50,36 @@ main{
   --gap: 16px;
 }
 
-/* container */
+/* GRID (replaces columns masonry) */
 :global(#grid.masonry){
-  column-count: 1;                 /* mobile: 1 column */
-  column-gap: var(--gap);
+  display: grid;
+  grid-template-columns: 1fr;   /* mobile: 1 col */
+  gap: var(--gap);
+  align-items: start;
 }
 
-/* switch to 2 big columns on desktop */
+/* desktop: 3 flexible columns */
 @media (min-width: 900px){
   :global(#grid.masonry){
-    column-count: 2;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-/* cards */
+/* card defaults */
 :global(#grid.masonry > .card){
-  display: inline-block;
-  width: 100%;
-  margin: 0 0 var(--gap);
-  break-inside: avoid;
-  page-break-inside: avoid;
-  -webkit-column-break-inside: avoid;
+  margin: 0;
 }
 
-/* images */
+/* span controls */
+:global(#grid.masonry > .card[data-span="2"]){ grid-column: span 2; }
+:global(#grid.masonry > .card[data-span="3"]){ grid-column: 1 / -1; }
+
+/* image */
 :global(#grid.masonry img){
-  display:block;
-  width:100%;
-  height:auto;
-  border-radius: 0px;     /* clean editorial edges */
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0;
 }
 
 /* sentinel + status */
