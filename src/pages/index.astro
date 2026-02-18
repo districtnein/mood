@@ -1,1 +1,147 @@
+---
+import feed from "../data/feed.json";
+const title = feed.title ?? "moodboard";
+---
 
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+
+    <style>
+      :root { --pad: 18px; --gap: 12px; }
+
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        background: white;
+        color: black;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        padding: var(--pad);
+        backdrop-filter: blur(10px);
+        background: color-mix(in oklab, white 70%, transparent);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+      }
+
+      main { padding: 0 var(--pad) var(--pad); }
+
+      /* Masonry via CSS columns (minimal, no libs) */
+      .masonry { column-gap: var(--gap); }
+      @media (min-width: 640px) { .masonry { columns: 2; } }
+      @media (min-width: 960px) { .masonry { columns: 3; } }
+      @media (min-width: 1280px) { .masonry { columns: 4; } }
+
+      .card {
+        break-inside: avoid;
+        margin: 0 0 var(--gap);
+      }
+
+      img {
+        width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 10px;
+      }
+
+      .sentinel { height: 1px; }
+      .status { padding-top: 10px; font-size: 12px; opacity: 0.55; }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>{title}</h1>
+    </header>
+
+    <main>
+      <section id="grid" class="masonry" aria-label="Moodboard"></section>
+      <div id="sentinel" class="sentinel" aria-hidden="true"></div>
+      <div id="status" class="status" aria-live="polite"></div>
+    </main>
+
+    <script>
+      const grid = document.getElementById("grid");
+      const sentinel = document.getElementById("sentinel");
+      const statusEl = document.getElementById("status");
+
+      let page = 1;
+      let loading = false;
+      let hasMore = true;
+
+      function el(tag, attrs = {}) {
+        const node = document.createElement(tag);
+        for (const [k, v] of Object.entries(attrs)) {
+          if (v === undefined || v === null || v === "") continue;
+          node.setAttribute(k, v);
+        }
+        return node;
+      }
+
+      function renderItems(items) {
+        const frag = document.createDocumentFragment();
+        for (const it of items) {
+          const img = el("img", {
+            src: it.src,
+            alt: it.alt || "",
+            loading: "lazy",
+            decoding: "async",
+            width: it.w || "",
+            height: it.h || ""
+          });
+
+          const card = document.createElement("div");
+          card.className = "card";
+          card.appendChild(img);
+          frag.appendChild(card);
+        }
+        grid.appendChild(frag);
+      }
+
+      async function loadNext() {
+        if (loading || !hasMore) return;
+        loading = true;
+        statusEl.textContent = "Loading…";
+
+        try {
+          const res = await fetch(`/api/feed.json?page=${page}&pageSize=36`, { cache: "no-store" });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+
+          renderItems(data.items);
+          hasMore = Boolean(data.hasMore);
+          page += 1;
+
+          statusEl.textContent = hasMore ? "" : "End.";
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent = "Couldn’t load more.";
+        } finally {
+          loading = false;
+        }
+      }
+
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) loadNext();
+        },
+        { rootMargin: "800px" }
+      );
+
+      io.observe(sentinel);
+      loadNext();
+    </script>
+  </body>
+</html>
