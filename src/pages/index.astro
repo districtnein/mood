@@ -193,10 +193,17 @@ main{
           const data = await res.json();
 
           renderItems(data.items);
-          hasMore = Boolean(data.hasMore);
-          page += 1;
+         hasMore = Boolean(data.hasMore);
 
-          statusEl.textContent = hasMore ? "" : "End.";
+if (hasMore) {
+  page += 1;
+  statusEl.textContent = "";
+} else {
+  // loop: start over
+  page = 1;
+  hasMore = true;
+  statusEl.textContent = "";
+}
         } catch (err) {
           console.error(err);
           statusEl.textContent = "Couldn’t load more.";
