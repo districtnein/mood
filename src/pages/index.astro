@@ -134,6 +134,8 @@ main{
     </main>
 
     <script>
+const MAX_NODES = 300; // tune (150–500)
+
       const grid = document.getElementById("grid");
       const sentinel = document.getElementById("sentinel");
       const statusEl = document.getElementById("status");
@@ -182,6 +184,10 @@ main{
 
   grid.appendChild(frag);
 }
+while (grid.children.length > MAX_NODES) {
+  grid.removeChild(grid.firstElementChild);
+}
+
       async function loadNext() {
         if (loading || !hasMore) return;
         loading = true;
