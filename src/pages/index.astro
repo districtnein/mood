@@ -38,26 +38,30 @@ const title = feed.title ?? "moodboard";
 
       main { padding: 0 var(--pad) var(--pad); }
 
-      /* Masonry via CSS columns (minimal, no libs) */
-      .masonry { column-gap: var(--gap); }
-      @media (min-width: 640px) { .masonry { columns: 2; } }
-      @media (min-width: 960px) { .masonry { columns: 3; } }
-      @media (min-width: 1280px) { .masonry { columns: 4; } }
+     /* Masonry via CSS columns */
+.masonry{
+  column-count: 1;         /* important: define a baseline */
+  column-gap: var(--gap);
+}
 
-      .card {
-        break-inside: avoid;
-        margin: 0 0 var(--gap);
-      }
+@media (min-width: 640px) { .masonry { column-count: 2; } }
+@media (min-width: 960px) { .masonry { column-count: 3; } }
+@media (min-width: 1280px){ .masonry { column-count: 4; } }
 
-      img {
-        width: 100%;
-        height: auto;
-        display: block;
-        border-radius: 10px;
-      }
+/* important: make each item a column "box" */
+.card{
+  display: inline-block;    /* prevents overlap/weird stacking */
+  width: 100%;
+  break-inside: avoid;
+  margin: 0 0 var(--gap);
+}
 
-      .sentinel { height: 1px; }
-      .status { padding-top: 10px; font-size: 12px; opacity: 0.55; }
+img{
+  display: block;           /* removes inline gaps */
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
     </style>
   </head>
 
