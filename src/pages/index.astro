@@ -131,29 +131,36 @@ const title = feed.title ?? "moodboard";
       }
 
       function renderItems(items) {
-        const frag = document.createDocumentFragment();
+  const frag = document.createDocumentFragment();
 
-        for (const it of items) {
-          const img = el("img", {
-            src: it.src,
-            alt: it.alt || "",
-            loading: "lazy",
-            decoding: "async",
-            width: it.w || "",
-            height: it.h || ""
-          });
+  // Each item includes layout (1/2/3) from the endpoint
+  // Group into rows by reading sequentially:
+  for (let i = 0; i < items.length; ) {
+    const layout = Number(items[i].layout || 1);
 
-          const card = document.createElement("div");
-          card.className = "card";
-          card.dataset.span = String(it.span || 1); // 1,2,3
+    const row = document.createElement("div");
+    row.className = "row";
+    row.dataset.layout = String(layout);
 
-          card.appendChild(img);
-          frag.appendChild(card);
-        }
+    const take = Math.min(layout, items.length - i);
+    for (let j = 0; j < take; j++) {
+      const it = items[i + j];
+      const img = document.createElement("img");
+      img.src = it.src;
+      img.alt = it.alt || "";
+      img.loading = "lazy";
+      img.decoding = "async";
+      if (it.w) img.width = it.w;
+      if (it.h) img.height = it.h;
+      row.appendChild(img);
+    }
 
-        grid.appendChild(frag);
-      }
+    frag.appendChild(row);
+    i += take;
+  }
 
+  grid.appendChild(frag);
+}
       async function loadNext() {
         if (loading || !hasMore) return;
         loading = true;
