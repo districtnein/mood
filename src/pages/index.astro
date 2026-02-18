@@ -138,90 +138,93 @@ export const prerender = true;
       <div id="status" class="status"></div>
     </main>
 
-    <script>
-      const grid = document.getElementById("grid");
-      const sentinel = document.getElementById("sentinel");
-      const statusEl = document.getElementById("status");
+  <script>
+  const grid = document.getElementById("grid");
+  const sentinel = document.getElementById("sentinel");
+  const statusEl = document.getElementById("status");
 
-      let page = 1;
-      let loading = false;
-      let hasMore = true;
+  const CHUNK = 8;     // rows per load
+  let idx = 0;
+  let rows = [];
+  let loading = false;
 
-      function createImageNode(it){
-        const img = document.createElement("img");
-        img.src = it.src;
-        img.alt = it.alt || "";
-        img.loading = "lazy";
-        img.decoding = "async";
-        if (it.w) img.width = it.w;
-        if (it.h) img.height = it.h;
+  function createImageNode(it){
+    const img = document.createElement("img");
+    img.src = it.src;
+    img.alt = it.alt || "";
+    img.loading = "lazy";
+    img.decoding = "async";
+    if (it.w) img.width = it.w;
+    if (it.h) img.height = it.h;
 
-        if (it.link){
-          const a = document.createElement("a");
-          a.href = it.link;
-          a.target = "_blank";
-          a.rel = "noopener noreferrer";
-          a.appendChild(img);
-          return a;
-        }
+    if (it.link){
+      const a = document.createElement("a");
+      a.href = it.link;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.appendChild(img);
+      return a;
+    }
+    return img;
+  }
 
-        return img;
+  function renderNext(){
+    if (idx >= rows.length) {
+      if (statusEl) statusEl.textContent = "";
+      io.disconnect();
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+    const slice = rows.slice(idx, idx + CHUNK);
+    idx += CHUNK;
+
+    for (const rowData of slice){
+      const row = document.createElement("div");
+      row.className = "row";
+
+      const items = Array.isArray(rowData.items) ? rowData.items : [];
+      const layout = Number(rowData.layout) || Math.min(3, Math.max(1, items.length));
+      row.dataset.layout = String(layout);
+
+      for (const it of items){
+        row.appendChild(createImageNode(it));
       }
+      frag.appendChild(row);
+    }
 
-      function renderRows(rows){
-        const frag = document.createDocumentFragment();
+    grid.appendChild(frag);
+    if (statusEl) statusEl.textContent = "";
+  }
 
-        for (const rowData of rows){
-          const row = document.createElement("div");
-          row.className = "row";
+  async function init(){
+    if (loading) return;
+    loading = true;
+    if (statusEl) statusEl.textContent = "Loading…";
 
-          const items = Array.isArray(rowData.items) ? rowData.items : [];
-          const layout = Number(rowData.layout) || Math.min(3, Math.max(1, items.length));
-          row.dataset.layout = String(layout);
+    try{
+      const res = await fetch("/api/feed.json", { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      rows = Array.isArray(data.rows) ? data.rows : [];
+      renderNext(); // initial paint
+    }catch(err){
+      console.error(err);
+      if (statusEl) statusEl.textContent = "Couldn’t load.";
+    }finally{
+      loading = false;
+    }
+  }
 
-          for (const it of items){
-            row.appendChild(createImageNode(it));
-          }
+  const io = new IntersectionObserver(
+    (entries) => {
+      if (entries.some(e => e.isIntersecting)) renderNext();
+    },
+    { rootMargin: "900px" }
+  );
 
-          frag.appendChild(row);
-        }
-
-        grid.appendChild(frag);
-      }
-
-      async function loadNext(){
-        if (loading || !hasMore) return;
-        loading = true;
-        statusEl.textContent = "Loading…";
-
-        try{
-          const res = await fetch(`/api/feed.json?page=${page}&pageSize=12`, { cache:"no-store" });
-          const data = await res.json();
-
-          renderRows(data.rows || []);
-
-          hasMore = Boolean(data.hasMore);
-          page += 1;
-
-          if (!hasMore && io) io.disconnect();
-          statusEl.textContent = "";
-        }catch(err){
-          console.error(err);
-          statusEl.textContent = "Error loading.";
-        }finally{
-          loading = false;
-        }
-      }
-
-      const io = new IntersectionObserver(
-        (entries)=>{
-          if (entries.some(e => e.isIntersecting)) loadNext();
-        },
-        { rootMargin: "900px" }
-      );
-
-      io.observe(sentinel);
-      loadNext();
-    </script>
+  io.observe(sentinel);
+  init();
+</script>
   </body>
 </html>
