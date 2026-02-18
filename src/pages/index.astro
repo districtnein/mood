@@ -48,9 +48,9 @@ main{
 /* container */
 :global(#grid.masonry){
   display: block;
-  column-count: 2;
+:global(#grid.masonry){
+  column-count: 1;                 /* mobile: 1 column */
   column-gap: var(--gap);
-  column-fill: balance;
 }
 
 
@@ -66,7 +66,7 @@ main{
 
 :root{
   --pad: 24px;  /* outer padding */
-  --gap: 14px;  /* space between tiles */
+  --gap: 16px;  /* space between tiles */
 }
 
 /* images */
