@@ -11,93 +11,114 @@ const title = feed.title ?? "moodboard";
     <title>{title}</title>
 
     <style>
-      :root{
-        --pad: 24px;
-        --gap: 16px;
-        --single-max: 900px; /* cap for "one big image" rows */
-      }
+     :root{
+  --pad: 24px;
+  --gap: 16px;
+  --single-max: 900px; /* max width for single-image rows */
+}
 
-      body{
-        margin:0;
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-        background:white;
-        color:black;
-      }
+/* base */
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  background:white;
+  color:black;
+}
 
-      header{
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        padding: var(--pad);
-        backdrop-filter: blur(10px);
-        background: rgba(255,255,255,0.7);
-      }
+/* floating header */
+header{
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: var(--pad);
+  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.7);
+}
 
-      h1{
-        margin:0;
-        font-size:14px;
-        font-weight:500;
-        letter-spacing:0.02em;
-      }
+h1{
+  margin:0;
+  font-size:14px;
+  font-weight:500;
+  letter-spacing:0.02em;
+}
 
-      main{
-        padding: 0 var(--pad) var(--pad);
-      }
+/* main container */
+main{
+  padding: 0 var(--pad) var(--pad);
+  max-width: 1400px;
+  margin: 0 auto;
+}
 
-      /* =========================
-         NO-GRID LAYOUT (flex wrap)
-         ========================= */
+/* =========================
+   ROW LAYOUT (no grid)
+   ========================= */
 
-      :global(#grid.masonry){
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--gap);
-        align-items: flex-start;
-      }
+:global(#grid){
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  width: 100%;
+}
 
-      /* base card */
-      :global(#grid.masonry > .card){
-        display: block;
-      }
+/* each row */
+:global(.row){
+  display: flex;
+  gap: var(--gap);
+  align-items: flex-start;
+  width: 100%;
+}
 
-      /* desktop sizing driven by span
-         span 1 -> 3-ish across
-         span 2 -> 2-ish across
-         span 3 -> single (but capped + centered)
-      */
-      @media (min-width: 900px){
-        :global(#grid.masonry > .card[data-span="1"]){
-          flex: 1 1 calc(33.333% - (var(--gap) * 2 / 3));
-        }
+/* images */
+:global(.row img){
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0;
+}
 
-        :global(#grid.masonry > .card[data-span="2"]){
-          flex: 1 1 calc(50% - (var(--gap) / 2));
-        }
+/* ---------- layout variations ---------- */
 
-        :global(#grid.masonry > .card[data-span="3"]){
-          flex: 1 1 100%;
-          max-width: var(--single-max);
-          margin-left: auto;
-          margin-right: auto;
-        }
-      }
+/* 1 image row (centered, capped width) */
+:global(.row[data-layout="1"]){
+  justify-content: center;
+}
+:global(.row[data-layout="1"] img){
+  max-width: var(--single-max);
+}
 
-      /* mobile: always single column */
-      @media (max-width: 899px){
-        :global(#grid.masonry > .card){
-          flex: 1 1 100%;
-        }
-      }
+/* 2 image row */
+:global(.row[data-layout="2"] img){
+  width: calc(50% - (var(--gap) / 2));
+}
 
-      :global(#grid.masonry img){
-        display:block;
-        width:100%;
-        height:auto;
-        border-radius: 0px; /* set to 6px etc if you want */
-      }
+/* 3 image row */
+:global(.row[data-layout="3"] img){
+  width: calc(33.333% - (var(--gap) * 2 / 3));
+}
 
-      .sentinel{ height:1px; }
-      .status{ padding-top:10px; font-size:12px; opacity:0.55; }
+/* ---------- mobile ---------- */
+
+@media (max-width: 700px){
+  :global(.row){
+    flex-direction: column;
+  }
+
+  :global(.row img){
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
+
+/* infinite scroll helpers */
+.sentinel{
+  height:1px;
+}
+
+.status{
+  padding-top:10px;
+  font-size:12px;
+  opacity:0.55;
+}
     </style>
   </head>
 
