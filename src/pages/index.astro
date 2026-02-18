@@ -60,7 +60,6 @@ main{
   width: 100%;
 }
 
-/* each row */
 :global(.row){
   display: flex;
   gap: var(--gap);
@@ -68,7 +67,14 @@ main{
   width: 100%;
 }
 
-/* images */
+/* Normalize row children (they can be <img> OR <a>) */
+:global(.row > img),
+:global(.row > a){
+  display: block;
+  flex: 0 0 auto; /* we'll control width per layout below */
+}
+
+/* Images inside links */
 :global(.row img){
   display: block;
   width: 100%;
@@ -76,21 +82,25 @@ main{
   border-radius: 0;
 }
 
-/* 1 image row (centered, capped width) */
+/* 1-image rows: centered, capped */
 :global(.row[data-layout="1"]){
   justify-content: center;
 }
-:global(.row[data-layout="1"] img){
-  max-width: var(--single-max);
+
+:global(.row[data-layout="1"] > img),
+:global(.row[data-layout="1"] > a){
+  width: min(100%, var(--single-max));
 }
 
-/* 2 image row */
-:global(.row[data-layout="2"] img){
+/* 2-image rows: size the *children*, not the img */
+:global(.row[data-layout="2"] > img),
+:global(.row[data-layout="2"] > a){
   width: calc(50% - (var(--gap) / 2));
 }
 
-/* 3 image row */
-:global(.row[data-layout="3"] img){
+/* 3-image rows */
+:global(.row[data-layout="3"] > img),
+:global(.row[data-layout="3"] > a){
   width: calc(33.333% - (var(--gap) * 2 / 3));
 }
 
@@ -99,34 +109,37 @@ main{
   :global(.row){
     flex-direction: column;
   }
-  :global(.row img){
+
+  :global(.row > img),
+  :global(.row > a){
     width: 100% !important;
     max-width: none !important;
   }
 }
 
 /* =========================
-   LINK: invisible + no cues
+   LINK BEHAVIOR
    ========================= */
 
+/* No visual styling changes */
 :global(.row a){
-  display: block;
   text-decoration: none;
   color: inherit;
-  cursor: default; /* no pointer hand */
 }
 
-:global(.row a:hover),
-:global(.row a:focus),
-:global(.row a:active){
-  text-decoration: none;
-  color: inherit;
+/* Cursor indicates click ONLY when there is a link */
+:global(.row a){
+  cursor: pointer;
+}
+
+/* Non-linked images keep default cursor */
+:global(.row > img){
+  cursor: default;
+}
+
+/* Remove focus outline visuals (optional) */
+:global(.row a:focus){
   outline: none;
-}
-
-:global(.row a img){
-  opacity: 1;
-  transform: none;
 }
 
 /* infinite scroll helpers */
