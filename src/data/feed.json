@@ -1,53 +1,26 @@
 {
-  "title": "moodboard",
-  "items": [
+  "title": "mood",
+  "rows": [
     {
-      "src": "https://payload.cargocollective.com/1/0/31246/13886292/sucux-logo-usbynight_640.jpg",
-      "w": 1200,
-      "h": 1600,
-      "alt": "",
-      "span": 1,
-      "date": "2026-02-18"
+      "layout": 1,
+      "items": [
+        { "src": "https://payload.cargocollective.com/1/0/31246/13886292/sucux-logo-usbynight_640.jpg", "w": 1200, "h": 1600 }
+      ]
     },
     {
-      "src": "https://payload.cargocollective.com/1/0/31246/13864098/protect-text_950.jpg",
-      "w": 1200,
-      "h": 800,
-      "alt": "",
-      "span": 1,
-      "date": "2026-02-18"
+      "layout": 2,
+      "items": [
+        { "src": "https://payload.cargocollective.com/1/0/31246/13886292/sucux-logo-usbynight_640.jpg", "w": 1200, "h": 1600 },
+        { "src": "https://payload.cargocollective.com/1/0/31246/13886292/sucux-logo-usbynight_640.jpg", "w": 1200, "h": 800 }
+      ]
     },
     {
-      "src": "https://payload.cargocollective.com/1/0/31246/13864098/Screenshot-2019-04-26-at-17.25.20_1060.png",
-      "w": 1200,
-      "h": 1800,
-      "alt": "",
-      "span": 1,
-      "date": "2026-02-18"
-    },
-      {
-      "src": "https://payload.cargocollective.com/1/0/31246/14012061/01_dsc5207_ok_crop-1920x783-q70_1600_c.jpg",
-      "w": 1200,
-      "h": 1800,
-      "alt": "",
-      "span": 2,
-      "date": "2026-02-18"
-    },
-       {
-      "src": "https://qubik.com/zr/wp-content/uploads/2026/02/0b2778396e407bf1303ad910201338446b46bf30-2560x3200-1-768x960.jpg",
-      "w": 1200,
-      "h": 1800,
-      "alt": "",
-      "span": 1,
-      "date": "2026-02-18"
-    },
-      {
-      "src": "https://qubik.com/zr/wp-content/uploads/2026/02/801006475f2537421a3994a9e5ccc8db1ee23c52-2560x3200-1.jpg",
-      "w": 1200,
-      "h": 1800,
-      "alt": "",
-      "span": 1,
-      "date": "2026-02-18"
-     }
+      "layout": 3,
+      "items": [
+        { "src": "https://payload.cargocollective.com/1/0/31246/13886292/sucux-logo-usbynight_640.jpg", "w": 1200, "h": 1600 },
+        { "src": "https://payload.cargocollective.com/1/0/31246/13886292/sucux-logo-usbynight_640.jpg", "w": 1200, "h": 800 },
+        { "src": "https://payload.cargocollective.com/1/0/31246/13886292/sucux-logo-usbynight_640.jpg", "w": 1200, "h": 1000 }
+      ]
+    }
   ]
 }
