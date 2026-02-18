@@ -1,160 +1,151 @@
+
 ---
-import feed from "../data/feed.json";
-const title = feed.title ?? "mood";
-const rows = Array.isArray(feed.rows) ? feed.rows : [];
+export const prerender = true;
 ---
 
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title}</title>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>mood</title>
 
-    <style>
-      :root{
-        --pad: 24px;
-        --gap: 16px;
-        --single-max: 900px;
-      }
+<style>
+:root{
+--pad: 24px;
+--gap: 16px;
+--single-max: 900px;
+}
 
-      body{
-        margin:0;
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-        background:white;
-        color:black;
-      }
+body{
+margin:0;
+font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+background:white;
+color:black;
+}
 
-      /* transparent header */
-      header{
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        padding: var(--pad);
-        background: transparent;
-        backdrop-filter: none;
-      }
+/* transparent header */
+header{
+position: sticky;
+top: 0;
+z-index: 20;
+padding: var(--pad);
+background: transparent;
+backdrop-filter: none;
+}
 
-      h1{
-        margin:0;
-        font-size:14px;
-        font-weight:500;
-        letter-spacing:0.02em;
-      }
+h1{
+margin:0;
+font-size:14px;
+font-weight:500;
+letter-spacing:0.02em;
+}
 
-      main{
-        padding: 0 var(--pad) var(--pad);
-        max-width: 1400px;
-        margin: 0 auto;
-      }
+main{
+padding: 0 var(--pad) var(--pad);
+max-width: 1400px;
+margin: 0 auto;
+}
 
-      /* rows container */
-      :global(#grid){
-        display:flex;
-        flex-direction:column;
-        gap: var(--gap);
-        width:100%;
-      }
+/* GRID = rows stacked vertically */
+:global(#grid){
+display:flex;
+flex-direction:column;
+gap: var(--gap);
+width:100%;
+}
 
-      :global(.row){
-        display:flex;
-        gap: var(--gap);
-        align-items:flex-start;
-        width:100%;
-      }
+:global(.row){
+display:flex;
+gap: var(--gap);
+align-items:flex-start;
+width:100%;
+}
 
-      /* row children can be <img> or <a> */
-      :global(.row > img),
-      :global(.row > a){
-        display:block;
-        flex: 0 0 auto;
-      }
+/* row children can be <img> or <a> */
+:global(.row > img),
+:global(.row > a){
+display:block;
+flex: 0 0 auto;
+}
 
-      :global(.row img){
-        display:block;
-        width:100%;
-        height:auto;
-      }
+:global(.row img){
+display:block;
+width:100%;
+height:auto;
+}
 
-      /* layout sizing */
-      :global(.row[data-layout="1"]){
-        justify-content:center;
-      }
+/* layout sizing */
+:global(.row[data-layout="1"]){
+justify-content:center;
+}
 
-      :global(.row[data-layout="1"] > img),
-      :global(.row[data-layout="1"] > a){
-        width:min(100%, var(--single-max));
-      }
+:global(.row[data-layout="1"] > img),
+:global(.row[data-layout="1"] > a){
+width:min(100%, var(--single-max));
+}
 
-      :global(.row[data-layout="2"] > img),
-      :global(.row[data-layout="2"] > a){
-        width:calc(50% - (var(--gap)/2));
-      }
+:global(.row[data-layout="2"] > img),
+:global(.row[data-layout="2"] > a){
+width:calc(50% - (var(--gap)/2));
+}
 
-      :global(.row[data-layout="3"] > img),
-      :global(.row[data-layout="3"] > a){
-        width:calc(33.333% - (var(--gap)*2/3));
-      }
+:global(.row[data-layout="3"] > img),
+:global(.row[data-layout="3"] > a){
+width:calc(33.333% - (var(--gap)*2/3));
+}
 
-      /* mobile */
-      @media (max-width:700px){
-        :global(.row){
-          flex-direction:column;
-        }
+/* mobile */
+@media (max-width:700px){
+:global(.row){
+flex-direction:column;
+}
 
-        :global(.row > img),
-        :global(.row > a){
-          width:100% !important;
-          max-width:none !important;
-        }
-      }
+:global(.row > img),
+:global(.row > a){
+width:100% !important;
+max-width:none !important;
+}
+}
 
-      /* links: no styling, but cursor indicates click */
-      :global(.row a){
-        text-decoration:none;
-        color:inherit;
-        cursor:pointer;
-      }
-      :global(.row > img){
-        cursor:default;
-      }
-      :global(.row a:focus){
-        outline:none;
-      }
+/* links */
+:global(.row a){
+text-decoration:none;
+color:inherit;
+cursor:pointer; /* only linked images get pointer */
+}
 
-      .sentinel{ height: 1px; }
-      .status{ padding-top:10px; font-size:12px; opacity:0.55; }
-    </style>
-  </head>
+:global(.row > img){
+cursor:default;
+}
 
-  <body>
-    <header>
-      <h1>{title}</h1>
-    </header>
+:global(.row a:focus){
+outline:none;
+}
 
-    <main>
-      <section id="grid" aria-label="Moodboard"></section>
-      <div id="sentinel" class="sentinel"></div>
-      <div id="status" class="status"></div>
+.sentinel{ height:1px; }
+.status{ padding-top:10px; font-size:12px; opacity:0.55; }
+</style>
+</head>
 
-      <!-- Embed your rows data at build-time -->
-      <script id="feed-data" type="application/json">{JSON.stringify(rows)}</script>
-    </main>
+<body>
+<header>
+<h1>mood</h1>
+</header>
+
+<main>
+<section id="grid" aria-label="Moodboard"></section>
+<div id="sentinel" class="sentinel"></div>
+<div id="status" class="status"></div>
+</main>
 
     <script>
       const grid = document.getElementById("grid");
       const sentinel = document.getElementById("sentinel");
       const statusEl = document.getElementById("status");
 
-      // Load embedded data (no network)
-      const rowsRaw = document.getElementById("feed-data")?.textContent || "[]";
-      let rows = [];
-      try { rows = JSON.parse(rowsRaw) || []; } catch { rows = []; }
-
-      // Show newest first (since you append new rows at bottom)
-      rows.reverse();
-
-      const CHUNK = 8; // rows per batch
-      let idx = 0;
+      let page = 1;
+      let loading = false;
+      let hasMore = true;
 
       function createImageNode(it){
         const img = document.createElement("img");
@@ -173,21 +164,14 @@ const rows = Array.isArray(feed.rows) ? feed.rows : [];
           a.appendChild(img);
           return a;
         }
+
         return img;
       }
 
-      function renderNext(){
-        if (idx >= rows.length){
-          if (statusEl) statusEl.textContent = "";
-          io.disconnect();
-          return;
-        }
-
+      function renderRows(rows){
         const frag = document.createDocumentFragment();
-        const slice = rows.slice(idx, idx + CHUNK);
-        idx += CHUNK;
 
-        for (const rowData of slice){
+        for (const rowData of rows){
           const row = document.createElement("div");
           row.className = "row";
 
@@ -205,15 +189,127 @@ const rows = Array.isArray(feed.rows) ? feed.rows : [];
         grid.appendChild(frag);
       }
 
+      async function loadNext(){
+        if (loading || !hasMore) return;
+        loading = true;
+        statusEl.textContent = "Loading…";
+
+        try{
+          const res = await fetch(`/api/feed.json?page=${page}&pageSize=12`, { cache:"no-store" });
+          const data = await res.json();
+
+          renderRows(data.rows || []);
+
+          hasMore = Boolean(data.hasMore);
+          page += 1;
+
+          if (!hasMore && io) io.disconnect();
+          statusEl.textContent = "";
+        }catch(err){
+          console.error(err);
+          statusEl.textContent = "Error loading.";
+        }finally{
+          loading = false;
+        }
+      }
+
       const io = new IntersectionObserver(
-        (entries) => {
-          if (entries.some(e => e.isIntersecting)) renderNext();
+        (entries)=>{
+          if (entries.some(e => e.isIntersecting)) loadNext();
         },
         { rootMargin: "900px" }
       );
 
       io.observe(sentinel);
-      renderNext();
+      loadNext();
     </script>
-  </body>
+  <script>
+  const grid = document.getElementById("grid");
+  const sentinel = document.getElementById("sentinel");
+  const statusEl = document.getElementById("status");
+
+  const CHUNK = 8;     // rows per load
+  let idx = 0;
+  let rows = [];
+  let loading = false;
+
+  function createImageNode(it){
+    const img = document.createElement("img");
+    img.src = it.src;
+    img.alt = it.alt || "";
+    img.loading = "lazy";
+    img.decoding = "async";
+    if (it.w) img.width = it.w;
+    if (it.h) img.height = it.h;
+
+    if (it.link){
+      const a = document.createElement("a");
+      a.href = it.link;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.appendChild(img);
+      return a;
+    }
+    return img;
+  }
+
+  function renderNext(){
+    if (idx >= rows.length) {
+      if (statusEl) statusEl.textContent = "";
+      io.disconnect();
+      return;
+    }
+
+    const frag = document.createDocumentFragment();
+    const slice = rows.slice(idx, idx + CHUNK);
+    idx += CHUNK;
+
+    for (const rowData of slice){
+      const row = document.createElement("div");
+      row.className = "row";
+
+      const items = Array.isArray(rowData.items) ? rowData.items : [];
+      const layout = Number(rowData.layout) || Math.min(3, Math.max(1, items.length));
+      row.dataset.layout = String(layout);
+
+      for (const it of items){
+        row.appendChild(createImageNode(it));
+      }
+      frag.appendChild(row);
+    }
+
+    grid.appendChild(frag);
+    if (statusEl) statusEl.textContent = "";
+  }
+
+  async function init(){
+    if (loading) return;
+    loading = true;
+    if (statusEl) statusEl.textContent = "Loading…";
+
+    try{
+      const res = await fetch("/api/feed.json", { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      rows = Array.isArray(data.rows) ? data.rows : [];
+      renderNext(); // initial paint
+    }catch(err){
+      console.error(err);
+      if (statusEl) statusEl.textContent = "Couldn’t load.";
+    }finally{
+      loading = false;
+    }
+  }
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      if (entries.some(e => e.isIntersecting)) renderNext();
+    },
+    { rootMargin: "900px" }
+  );
+
+  io.observe(sentinel);
+  init();
+</script>
+</body>
 </html>
