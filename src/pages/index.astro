@@ -1,253 +1,98 @@
----
-import feed from "../data/feed.json";
-const title = feed.title ?? "moodboard";
----
+<script>
+  const grid = document.getElementById("grid");
+  const sentinel = document.getElementById("sentinel");
+  const statusEl = document.getElementById("status");
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
+  let page = 1;
+  let loading = false;
+  let hasMore = true;
 
-    <style>
-    :root{
-  --pad: 24px;
-  --gap: 16px;
-  --single-max: 900px; /* max width for 1-image rows */
-}
+  function createImageNode(it) {
+    const img = document.createElement("img");
+    img.src = it.src;
+    img.alt = it.alt || "";
+    img.loading = "lazy";
+    img.decoding = "async";
+    if (it.w) img.width = it.w;
+    if (it.h) img.height = it.h;
 
-/* base */
-body{
-  margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  background:white;
-  color:black;
-}
-
-/* transparent floating header */
-header{
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  padding: var(--pad);
-  background: transparent;
-  backdrop-filter: none;
-}
-
-h1{
-  margin:0;
-  font-size:14px;
-  font-weight:500;
-  letter-spacing:0.02em;
-}
-
-/* page container */
-main{
-  padding: 0 var(--pad) var(--pad);
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-/* =========================
-   ROW LAYOUT (no grid)
-   ========================= */
-
-:global(#grid){
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap);
-  width: 100%;
-}
-
-:global(.row){
-  display: flex;
-  gap: var(--gap);
-  align-items: flex-start;
-  width: 100%;
-}
-
-/* Normalize row children (they can be <img> OR <a>) */
-:global(.row > img),
-:global(.row > a){
-  display: block;
-  flex: 0 0 auto; /* we'll control width per layout below */
-}
-
-/* Images inside links */
-:global(.row img){
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 0;
-}
-
-/* 1-image rows: centered, capped */
-:global(.row[data-layout="1"]){
-  justify-content: center;
-}
-
-:global(.row[data-layout="1"] > img),
-:global(.row[data-layout="1"] > a){
-  width: min(100%, var(--single-max));
-}
-
-/* 2-image rows: size the *children*, not the img */
-:global(.row[data-layout="2"] > img),
-:global(.row[data-layout="2"] > a){
-  width: calc(50% - (var(--gap) / 2));
-}
-
-/* 3-image rows */
-:global(.row[data-layout="3"] > img),
-:global(.row[data-layout="3"] > a){
-  width: calc(33.333% - (var(--gap) * 2 / 3));
-}
-
-/* mobile: stack */
-@media (max-width: 700px){
-  :global(.row){
-    flex-direction: column;
-  }
-
-  :global(.row > img),
-  :global(.row > a){
-    width: 100% !important;
-    max-width: none !important;
-  }
-}
-
-/* =========================
-   LINK BEHAVIOR
-   ========================= */
-
-/* No visual styling changes */
-:global(.row a){
-  text-decoration: none;
-  color: inherit;
-}
-
-/* Cursor indicates click ONLY when there is a link */
-:global(.row a){
-  cursor: pointer;
-}
-
-/* Non-linked images keep default cursor */
-:global(.row > img){
-  cursor: default;
-}
-
-/* Remove focus outline visuals (optional) */
-:global(.row a:focus){
-  outline: none;
-}
-
-/* infinite scroll helpers */
-.sentinel{ height: 1px; }
-.status{ padding-top: 10px; font-size: 12px; opacity: 0.55; }
-    </style>
-  </head>
-
-  <body>
-    <header>
-      <h1>{title}</h1>
-    </header>
-
-    <main>
-      <section id="grid" class="masonry" aria-label="Moodboard"></section>
-      <div id="sentinel" class="sentinel" aria-hidden="true"></div>
-      <div id="status" class="status" aria-live="polite"></div>
-    </main>
-
-    <script>
-const grid = document.getElementById("grid");
-const sentinel = document.getElementById("sentinel");
-const statusEl = document.getElementById("status");
-
-let page = 1;
-let loading = false;
-let hasMore = true;
-
-function createImageNode(it) {
-  const img = document.createElement("img");
-  img.src = it.src;
-  img.alt = it.alt || "";
-  img.loading = "lazy";
-  img.decoding = "async";
-  if (it.w) img.width = it.w;
-  if (it.h) img.height = it.h;
-
-  // optional: open source in new tab with zero visual cue
-  if (it.link) {
-    const a = document.createElement("a");
-    a.href = it.link;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    a.appendChild(img);
-    return a;
-  }
-
-  return img;
-}
-
-function renderRows(rows) {
-  const frag = document.createDocumentFragment();
-
-  for (const rowData of rows) {
-    const row = document.createElement("div");
-    row.className = "row";
-
-    const items = Array.isArray(rowData.items) ? rowData.items : [];
-    // layout derived from data OR item count (forgives mistakes)
-    const layoutFromData = Number(rowData.layout || 0);
-    const layout = layoutFromData || Math.min(3, Math.max(1, items.length));
-    row.dataset.layout = String(layout);
-
-    // render all items in the row (if you want to HARD cap to 3, change items to items.slice(0,3))
-    for (const it of items) {
-      row.appendChild(createImageNode(it));
+    // If there is a link, wrap image in <a> that opens new tab
+    if (it.link) {
+      const a = document.createElement("a");
+      a.href = it.link;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.appendChild(img);
+      return a;
     }
 
-    frag.appendChild(row);
+    return img;
   }
 
-  grid.appendChild(frag);
-}
+  function renderRows(rows) {
+    const frag = document.createDocumentFragment();
 
-async function loadNext() {
-  if (loading || !hasMore) return;
-  loading = true;
-  statusEl.textContent = "Loading…";
+    for (const rowData of rows) {
+      const row = document.createElement("div");
+      row.className = "row";
 
-  try {
-    const res = await fetch(`/api/feed.json?page=${page}&pageSize=12`, { cache: "no-store" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+      const items = Array.isArray(rowData.items) ? rowData.items : [];
+      // forgiving: if layout wrong/missing, derive from count
+      const layout = Number(rowData.layout) || Math.min(3, Math.max(1, items.length));
+      row.dataset.layout = String(layout);
 
-    const rows = Array.isArray(data.rows) ? data.rows : [];
-    renderRows(rows);
+      for (const it of items) {
+        row.appendChild(createImageNode(it));
+      }
 
-    hasMore = Boolean(data.hasMore);
-    page += 1;
+      frag.appendChild(row);
+    }
 
-    statusEl.textContent = hasMore ? "" : "";
-  } catch (err) {
-    console.error(err);
-    statusEl.textContent = "Couldn’t load more.";
-  } finally {
-    loading = false;
+    grid.appendChild(frag);
   }
-}
 
-const io = new IntersectionObserver(
-  (entries) => {
-    if (entries.some((e) => e.isIntersecting)) loadNext();
-  },
-  { rootMargin: "800px" }
-);
+  async function loadNext() {
+    if (loading || !hasMore) return;
+    loading = true;
+    if (statusEl) statusEl.textContent = "Loading…";
 
-io.observe(sentinel);
-loadNext();
-    </script>
-  </body>
-</html>
+    try {
+      const res = await fetch(`/api/feed.json?page=${page}&pageSize=12`, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      const rows = Array.isArray(data.rows) ? data.rows : [];
+      renderRows(rows);
+
+      hasMore = Boolean(data.hasMore);
+      page += 1;
+
+      if (statusEl) statusEl.textContent = hasMore ? "" : "";
+      if (!hasMore && io) io.disconnect(); // stop observing at the end
+    } catch (err) {
+      console.error(err);
+      if (statusEl) statusEl.textContent = "Couldn’t load more.";
+    } finally {
+      loading = false;
+    }
+  }
+
+  // Make sure sentinel exists
+  if (!sentinel) {
+    console.error("Missing #sentinel element. Infinite scroll disabled.");
+  }
+
+  const io = sentinel
+    ? new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) loadNext();
+        },
+        { rootMargin: "900px" }
+      )
+    : null;
+
+  if (io && sentinel) io.observe(sentinel);
+
+  // initial load
+  loadNext();
+</script>
