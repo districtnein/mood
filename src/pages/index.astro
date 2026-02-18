@@ -11,76 +11,99 @@ const title = feed.title ?? "moodboard";
     <title>{title}</title>
 
     <style>
-      :root{
-        --pad: 24px;
-        --gap: 16px;
-      }
-
-      body{
-        margin:0;
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-        background:white;
-        color:black;
-      }
-
-      header{
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        padding: var(--pad);
-        backdrop-filter: blur(10px);
-        background: rgba(255,255,255,0.7);
-      }
-
-      h1{
-        margin:0;
-        font-size:14px;
-        font-weight:500;
-        letter-spacing:0.02em;
-      }
-
-      main{
-        padding: 0 var(--pad) var(--pad);
-      }
-
-      /* --- GRID layout (haphazard spans) --- */
-      :global(#grid.masonry){
-        display: grid;
-        grid-template-columns: 1fr; /* mobile */
-        gap: var(--gap);
-        align-items: start;
-      }
-
-      @media (min-width: 900px){
-        :global(#grid.masonry){
-          grid-template-columns: repeat(3, minmax(0, 1fr)); /* desktop */
-        }
-      }
-
-      :global(#grid.masonry > .card){
-        margin: 0;
-      }
-
-      :global(#grid.masonry > .card[data-span="2"]){
-        grid-column: span 2;
-      }
-
-    :global(#grid.masonry > .card[data-span="3"]){
-  grid-column: 1 / -1;     /* full row */
-  max-width: 900px;        /* ← adjust this number */
-  margin-left: auto;
-  margin-right: auto;      /* center it */
+     :root{
+  --pad: 24px;
+  --gap: 16px;
+  --single-max: 900px; /* max width for 1-image rows */
 }
 
-      :global(#grid.masonry img){
-        display:block;
-        width:100%;
-        height:auto;
-        border-radius: 0px;
-      }
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  background: white;
+  color: black;
+}
 
-      .sentinel{ height:1px; }
-      .status{ padding-top:10px; font-size:12px; opacity:0.55; }
+header{
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: var(--pad);
+  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.7);
+}
+
+h1{
+  margin:0;
+  font-size:14px;
+  font-weight:500;
+  letter-spacing:0.02em;
+}
+
+main{
+  padding: 0 var(--pad) var(--pad);
+}
+
+/* =========================
+   EDITORIAL ROW LAYOUT
+   (no grid, no columns)
+   ========================= */
+
+:global(#grid){
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+/* each row container */
+:global(.row){
+  display: flex;
+  gap: var(--gap);
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* make images behave */
+:global(.row img){
+  display: block;
+  height: auto;
+  max-width: 100%;
+  border-radius: 0;
+}
+
+/* 1-image row: centered, capped width */
+:global(.row[data-layout="1"]){
+  justify-content: center;
+}
+:global(.row[data-layout="1"] img){
+  width: 100%;
+  max-width: var(--single-max);
+}
+
+/* 2-image row */
+:global(.row[data-layout="2"] img){
+  width: calc(50% - (var(--gap) / 2));
+}
+
+/* 3-image row */
+:global(.row[data-layout="3"] img){
+  width: calc(33.333% - (var(--gap) * 2 / 3));
+}
+
+/* mobile: always stack to 1 per row */
+@media (max-width: 700px){
+  :global(.row){
+    flex-direction: column;
+  }
+  :global(.row img){
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
+
+/* sentinel + status */
+.sentinel{ height: 1px; }
+.status{ padding-top: 10px; font-size: 12px; opacity: 0.55; }
     </style>
   </head>
 
