@@ -153,21 +153,16 @@ const MAX_NODES = 300; // tune (150–500)
         return node;
       }
 
-      function renderItems(items) {
+      function renderRows(rows) {
   const frag = document.createDocumentFragment();
 
-  // Each item includes layout (1/2/3) from the endpoint
-  // Group into rows by reading sequentially:
-  for (let i = 0; i < items.length; ) {
-    const layout = Number(items[i].layout || 1);
-
+  for (const rowData of rows) {
     const row = document.createElement("div");
     row.className = "row";
-    row.dataset.layout = String(layout);
+    row.dataset.layout = String(rowData.layout || 1);
 
-    const take = Math.min(layout, items.length - i);
-    for (let j = 0; j < take; j++) {
-      const it = items[i + j];
+    const items = Array.isArray(rowData.items) ? rowData.items : [];
+    for (const it of items) {
       const img = document.createElement("img");
       img.src = it.src;
       img.alt = it.alt || "";
@@ -179,11 +174,12 @@ const MAX_NODES = 300; // tune (150–500)
     }
 
     frag.appendChild(row);
-    i += take;
   }
 
   grid.appendChild(frag);
 }
+
+
 while (grid.children.length > MAX_NODES) {
   grid.removeChild(grid.firstElementChild);
 }
@@ -198,7 +194,7 @@ while (grid.children.length > MAX_NODES) {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
 
-          renderItems(data.items);
+          renderRows(data.rows);
          hasMore = Boolean(data.hasMore);
 
 if (hasMore) {
