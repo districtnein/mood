@@ -138,13 +138,10 @@ main{
             height: it.h || ""
           });
 
-          const card = document.createElement("div");
-          card.className = "card";
-          card.appendChild(img);
-          frag.appendChild(card);
-        }
-        grid.appendChild(frag);
-      }
+const card = document.createElement("div");
+card.className = "card";
+card.appendChild(img);
+frag.appendChild(card);
 
       async function loadNext() {
         if (loading || !hasMore) return;
