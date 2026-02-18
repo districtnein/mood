@@ -65,9 +65,12 @@ const title = feed.title ?? "moodboard";
         grid-column: span 2;
       }
 
-      :global(#grid.masonry > .card[data-span="3"]){
-        grid-column: 1 / -1;
-      }
+    :global(#grid.masonry > .card[data-span="3"]){
+  grid-column: 1 / -1;     /* full row */
+  max-width: 900px;        /* ← adjust this number */
+  margin-left: auto;
+  margin-right: auto;      /* center it */
+}
 
       :global(#grid.masonry img){
         display:block;
