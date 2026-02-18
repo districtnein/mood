@@ -61,7 +61,32 @@ img{
   border-radius: 10px;
 }
 img { max-height: 85vh; object-fit: contain; }
-    </style>
+
+
+/* FORCE masonry columns (override-safe) */
+section#masonry-fix-not-used {} /* harmless anchor */
+
+section#grid.masonry{
+  column-width: 320px !important;
+  column-gap: 12px !important;
+  column-fill: balance !important;
+}
+
+section#grid.masonry > .card{
+  display: inline-block !important;
+  width: 100% !important;
+  margin: 0 0 12px !important;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+  -webkit-column-break-inside: avoid !important;
+}
+
+section#grid.masonry img{
+  width: 100% !important;
+  height: auto !important;
+  display: block !important;
+}
+</style>
   </head>
 
 
