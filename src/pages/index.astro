@@ -136,29 +136,30 @@ main{
         return node;
       }
 
-      function renderItems(items) {
-        const frag = document.createDocumentFragment();
+     function renderItems(rows) {
+  const frag = document.createDocumentFragment();
 
-        for (const it of items) {
-          const img = el("img", {
-            src: it.src,
-            alt: it.alt || "",
-            loading: "lazy",
-            decoding: "async",
-            width: it.w || "",
-            height: it.h || ""
-          });
+  for (const rowData of rows) {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.dataset.layout = rowData.layout;
 
-          const card = document.createElement("div");
-          card.className = "card";
-          card.dataset.span = String(it.span || 1); // 1, 2, or 3
+    for (const it of rowData.items) {
+      const img = document.createElement("img");
+      img.src = it.src;
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.width = it.w || "";
+      img.height = it.h || "";
 
-          card.appendChild(img);
-          frag.appendChild(card);
-        }
+      row.appendChild(img);
+    }
 
-        grid.appendChild(frag);
-      }
+    frag.appendChild(row);
+  }
+
+  grid.appendChild(frag);
+}
 
       async function loadNext() {
         if (loading || !hasMore) return;
