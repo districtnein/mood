@@ -1,13 +1,14 @@
-
 ---
-export const prerender = true;
+import feed from "../data/feed.json";
+const title = feed.title ?? "mood";
+const rows = Array.isArray(feed.rows) ? feed.rows : [];
 ---
 
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>mood</title>
+    <title>{title}</title>
 
     <style>
       :root{
@@ -46,7 +47,7 @@ export const prerender = true;
         margin: 0 auto;
       }
 
-      /* GRID = rows stacked vertically */
+      /* rows container */
       :global(#grid){
         display:flex;
         flex-direction:column;
@@ -107,124 +108,112 @@ export const prerender = true;
         }
       }
 
-      /* links */
+      /* links: no styling, but cursor indicates click */
       :global(.row a){
         text-decoration:none;
         color:inherit;
-        cursor:pointer; /* only linked images get pointer */
+        cursor:pointer;
       }
-
       :global(.row > img){
         cursor:default;
       }
-
       :global(.row a:focus){
         outline:none;
       }
 
-      .sentinel{ height:1px; }
+      .sentinel{ height: 1px; }
       .status{ padding-top:10px; font-size:12px; opacity:0.55; }
     </style>
   </head>
 
   <body>
     <header>
-      <h1>mood</h1>
+      <h1>{title}</h1>
     </header>
 
     <main>
       <section id="grid" aria-label="Moodboard"></section>
       <div id="sentinel" class="sentinel"></div>
       <div id="status" class="status"></div>
+
+      <!-- Embed your rows data at build-time -->
+      <script id="feed-data" type="application/json">{JSON.stringify(rows)}</script>
     </main>
 
-  <script>
-  const grid = document.getElementById("grid");
-  const sentinel = document.getElementById("sentinel");
-  const statusEl = document.getElementById("status");
+    <script>
+      const grid = document.getElementById("grid");
+      const sentinel = document.getElementById("sentinel");
+      const statusEl = document.getElementById("status");
 
-  const CHUNK = 8;     // rows per load
-  let idx = 0;
-  let rows = [];
-  let loading = false;
+      // Load embedded data (no network)
+      const rowsRaw = document.getElementById("feed-data")?.textContent || "[]";
+      let rows = [];
+      try { rows = JSON.parse(rowsRaw) || []; } catch { rows = []; }
 
-  function createImageNode(it){
-    const img = document.createElement("img");
-    img.src = it.src;
-    img.alt = it.alt || "";
-    img.loading = "lazy";
-    img.decoding = "async";
-    if (it.w) img.width = it.w;
-    if (it.h) img.height = it.h;
+      // Show newest first (since you append new rows at bottom)
+      rows.reverse();
 
-    if (it.link){
-      const a = document.createElement("a");
-      a.href = it.link;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.appendChild(img);
-      return a;
-    }
-    return img;
-  }
+      const CHUNK = 8; // rows per batch
+      let idx = 0;
 
-  function renderNext(){
-    if (idx >= rows.length) {
-      if (statusEl) statusEl.textContent = "";
-      io.disconnect();
-      return;
-    }
+      function createImageNode(it){
+        const img = document.createElement("img");
+        img.src = it.src;
+        img.alt = it.alt || "";
+        img.loading = "lazy";
+        img.decoding = "async";
+        if (it.w) img.width = it.w;
+        if (it.h) img.height = it.h;
 
-    const frag = document.createDocumentFragment();
-    const slice = rows.slice(idx, idx + CHUNK);
-    idx += CHUNK;
-
-    for (const rowData of slice){
-      const row = document.createElement("div");
-      row.className = "row";
-
-      const items = Array.isArray(rowData.items) ? rowData.items : [];
-      const layout = Number(rowData.layout) || Math.min(3, Math.max(1, items.length));
-      row.dataset.layout = String(layout);
-
-      for (const it of items){
-        row.appendChild(createImageNode(it));
+        if (it.link){
+          const a = document.createElement("a");
+          a.href = it.link;
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.appendChild(img);
+          return a;
+        }
+        return img;
       }
-      frag.appendChild(row);
-    }
 
-    grid.appendChild(frag);
-    if (statusEl) statusEl.textContent = "";
-  }
+      function renderNext(){
+        if (idx >= rows.length){
+          if (statusEl) statusEl.textContent = "";
+          io.disconnect();
+          return;
+        }
 
-  async function init(){
-    if (loading) return;
-    loading = true;
-    if (statusEl) statusEl.textContent = "Loading…";
+        const frag = document.createDocumentFragment();
+        const slice = rows.slice(idx, idx + CHUNK);
+        idx += CHUNK;
 
-    try{
-      const res = await fetch("/api/feed.json", { cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      rows = Array.isArray(data.rows) ? data.rows : [];
-      renderNext(); // initial paint
-    }catch(err){
-      console.error(err);
-      if (statusEl) statusEl.textContent = "Couldn’t load.";
-    }finally{
-      loading = false;
-    }
-  }
+        for (const rowData of slice){
+          const row = document.createElement("div");
+          row.className = "row";
 
-  const io = new IntersectionObserver(
-    (entries) => {
-      if (entries.some(e => e.isIntersecting)) renderNext();
-    },
-    { rootMargin: "900px" }
-  );
+          const items = Array.isArray(rowData.items) ? rowData.items : [];
+          const layout = Number(rowData.layout) || Math.min(3, Math.max(1, items.length));
+          row.dataset.layout = String(layout);
 
-  io.observe(sentinel);
-  init();
-</script>
+          for (const it of items){
+            row.appendChild(createImageNode(it));
+          }
+
+          frag.appendChild(row);
+        }
+
+        grid.appendChild(frag);
+      }
+
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some(e => e.isIntersecting)) renderNext();
+        },
+        { rootMargin: "900px" }
+      );
+
+      io.observe(sentinel);
+      renderNext();
+    </script>
   </body>
 </html>
