@@ -11,91 +11,75 @@ const title = feed.title ?? "moodboard";
     <title>{title}</title>
 
     <style>
+      :root{
+        --pad: 24px;
+        --gap: 16px;
+      }
 
+      body{
+        margin:0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+        background:white;
+        color:black;
+      }
 
-/* base */
-body{
-  margin:0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  background:white;
-  color:black;
-}
+      header{
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        padding: var(--pad);
+        backdrop-filter: blur(10px);
+        background: rgba(255,255,255,0.7);
+      }
 
-/* floating header */
-header{
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  padding: var(--pad);
-  background: none;
-}
+      h1{
+        margin:0;
+        font-size:14px;
+        font-weight:500;
+        letter-spacing:0.02em;
+      }
 
-h1{
-  margin:0;
-  font-size:14px;
-  font-weight:500;
-  letter-spacing:0.02em;
-}
+      main{
+        padding: 0 var(--pad) var(--pad);
+      }
 
-main{
-  padding: 0 var(--pad) var(--pad);
-}
+      /* --- GRID layout (haphazard spans) --- */
+      :global(#grid.masonry){
+        display: grid;
+        grid-template-columns: 1fr; /* mobile */
+        gap: var(--gap);
+        align-items: start;
+      }
 
-/* =========================
-   MASONRY (GLOBAL — IMPORTANT)
-   ========================= */
+      @media (min-width: 900px){
+        :global(#grid.masonry){
+          grid-template-columns: repeat(3, minmax(0, 1fr)); /* desktop */
+        }
+      }
 
-:root{
-  --pad: 24px;
-  --gap: 16px;
-}
+      :global(#grid.masonry > .card){
+        margin: 0;
+      }
 
-/* GRID (replaces columns masonry) */
-:global(#grid.masonry){
-  display: grid;
-  grid-template-columns: 1fr;   /* mobile: 1 col */
-  gap: var(--gap);
-  align-items: start;
-}
+      :global(#grid.masonry > .card[data-span="2"]){
+        grid-column: span 2;
+      }
 
-/* desktop: 3 flexible columns */
-@media (min-width: 900px){
-  :global(#grid.masonry){
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
+      :global(#grid.masonry > .card[data-span="3"]){
+        grid-column: 1 / -1;
+      }
 
-/* card defaults */
-:global(#grid.masonry > .card){
-  margin: 0;
-}
+      :global(#grid.masonry img){
+        display:block;
+        width:100%;
+        height:auto;
+        border-radius: 0px;
+      }
 
-/* span controls */
-:global(#grid.masonry > .card[data-span="2"]){ grid-column: span 2; }
-:global(#grid.masonry > .card[data-span="3"]){ grid-column: 1 / -1; }
-
-/* image */
-:global(#grid.masonry img){
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 0;
-}
-
-/* sentinel + status */
-.sentinel{
-  height:1px;
-}
-
-.status{
-  padding-top:10px;
-  font-size:12px;
-  opacity:0.55;
-}
-</style>
+      .sentinel{ height:1px; }
+      .status{ padding-top:10px; font-size:12px; opacity:0.55; }
+    </style>
   </head>
-
-
 
   <body>
     <header>
@@ -128,6 +112,7 @@ main{
 
       function renderItems(items) {
         const frag = document.createDocumentFragment();
+
         for (const it of items) {
           const img = el("img", {
             src: it.src,
@@ -138,10 +123,16 @@ main{
             height: it.h || ""
           });
 
-const card = document.createElement("div");
-card.className = "card";
-card.appendChild(img);
-frag.appendChild(card);
+          const card = document.createElement("div");
+          card.className = "card";
+          card.dataset.span = String(it.span || 1); // 1, 2, or 3
+
+          card.appendChild(img);
+          frag.appendChild(card);
+        }
+
+        grid.appendChild(frag);
+      }
 
       async function loadNext() {
         if (loading || !hasMore) return;
