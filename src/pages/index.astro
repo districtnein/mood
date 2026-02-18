@@ -11,41 +11,54 @@ const title = feed.title ?? "moodboard";
     <title>{title}</title>
 
     <style>
-      :root { --pad: 18px; --gap: 12px; }
-
-      body {
-        margin: 0;
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-        background: white;
-        color: black;
-      }
-
-      header {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        padding: var(--pad);
-        backdrop-filter: blur(10px);
-        background: color-mix(in oklab, white 70%, transparent);
-      }
-
-      h1 {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 500;
-        letter-spacing: 0.02em;
-      }
-
-      main { padding: 0 var(--pad) var(--pad); }
-
-    /* Masonry via CSS columns (reliable) */
-.masonry{
-  column-width: 320px;     /* target card width */
-  column-gap: var(--gap);
+      :root{
+  --pad: 18px;
+  --gap: 12px;
 }
 
-/* Ensure each item behaves as a column box */
-.card{
+/* base */
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  background:white;
+  color:black;
+}
+
+/* floating header */
+header{
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: var(--pad);
+  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.7);
+}
+
+h1{
+  margin:0;
+  font-size:14px;
+  font-weight:500;
+  letter-spacing:0.02em;
+}
+
+main{
+  padding: 0 var(--pad) var(--pad);
+}
+
+/* =========================
+   MASONRY (GLOBAL — IMPORTANT)
+   ========================= */
+
+/* container */
+:global(#grid.masonry){
+  display: block;
+  column-width: 320px;
+  column-gap: var(--gap);
+  column-fill: balance;
+}
+
+/* cards (JS-inserted, so must be global) */
+:global(#grid.masonry > .card){
   display: inline-block;
   width: 100%;
   margin: 0 0 var(--gap);
@@ -54,37 +67,23 @@ const title = feed.title ?? "moodboard";
   -webkit-column-break-inside: avoid;
 }
 
-img{
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 10px;
-}
-img { max-height: 85vh; object-fit: contain; }
-
-
-/* FORCE masonry columns (override-safe) */
-section#masonry-fix-not-used {} /* harmless anchor */
-
-section#grid.masonry{
-  column-width: 320px !important;
-  column-gap: 12px !important;
-  column-fill: balance !important;
+/* images */
+:global(#grid.masonry img){
+  display:block;
+  width:100%;
+  height:auto;
+  border-radius:10px;
 }
 
-section#grid.masonry > .card{
-  display: inline-block !important;
-  width: 100% !important;
-  margin: 0 0 12px !important;
-  break-inside: avoid !important;
-  page-break-inside: avoid !important;
-  -webkit-column-break-inside: avoid !important;
+/* sentinel + status */
+.sentinel{
+  height:1px;
 }
 
-section#grid.masonry img{
-  width: 100% !important;
-  height: auto !important;
-  display: block !important;
+.status{
+  padding-top:10px;
+  font-size:12px;
+  opacity:0.55;
 }
 </style>
   </head>
