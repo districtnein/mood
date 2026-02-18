@@ -11,10 +11,10 @@ const title = feed.title ?? "moodboard";
     <title>{title}</title>
 
     <style>
-     :root{
+    :root{
   --pad: 24px;
   --gap: 16px;
-  --single-max: 900px; /* max width for single-image rows */
+  --single-max: 900px; /* max width for 1-image rows */
 }
 
 /* base */
@@ -25,13 +25,14 @@ body{
   color:black;
 }
 
-/* floating header */
+/* transparent floating header */
 header{
   position: sticky;
   top: 0;
   z-index: 20;
   padding: var(--pad);
-  
+  background: transparent;
+  backdrop-filter: none;
 }
 
 h1{
@@ -39,11 +40,9 @@ h1{
   font-size:14px;
   font-weight:500;
   letter-spacing:0.02em;
-  text-shadow: 0 1px 6px rgba(0,0,0,0.25);
-
 }
 
-/* main container */
+/* page container */
 main{
   padding: 0 var(--pad) var(--pad);
   max-width: 1400px;
@@ -77,8 +76,6 @@ main{
   border-radius: 0;
 }
 
-/* ---------- layout variations ---------- */
-
 /* 1 image row (centered, capped width) */
 :global(.row[data-layout="1"]){
   justify-content: center;
@@ -97,29 +94,44 @@ main{
   width: calc(33.333% - (var(--gap) * 2 / 3));
 }
 
-/* ---------- mobile ---------- */
-
+/* mobile: stack */
 @media (max-width: 700px){
   :global(.row){
     flex-direction: column;
   }
-
   :global(.row img){
     width: 100% !important;
     max-width: none !important;
   }
 }
 
-/* infinite scroll helpers */
-.sentinel{
-  height:1px;
+/* =========================
+   LINK: invisible + no cues
+   ========================= */
+
+:global(.row a){
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: default; /* no pointer hand */
 }
 
-.status{
-  padding-top:10px;
-  font-size:12px;
-  opacity:0.55;
+:global(.row a:hover),
+:global(.row a:focus),
+:global(.row a:active){
+  text-decoration: none;
+  color: inherit;
+  outline: none;
 }
+
+:global(.row a img){
+  opacity: 1;
+  transform: none;
+}
+
+/* infinite scroll helpers */
+.sentinel{ height: 1px; }
+.status{ padding-top: 10px; font-size: 12px; opacity: 0.55; }
     </style>
   </head>
 
@@ -135,43 +147,52 @@ main{
     </main>
 
     <script>
-const MAX_NODES = 300; // tune (150–500)
+const grid = document.getElementById("grid");
+const sentinel = document.getElementById("sentinel");
+const statusEl = document.getElementById("status");
 
-      const grid = document.getElementById("grid");
-      const sentinel = document.getElementById("sentinel");
-      const statusEl = document.getElementById("status");
+let page = 1;
+let loading = false;
+let hasMore = true;
 
-      let page = 1;
-      let loading = false;
-      let hasMore = true;
+function createImageNode(it) {
+  const img = document.createElement("img");
+  img.src = it.src;
+  img.alt = it.alt || "";
+  img.loading = "lazy";
+  img.decoding = "async";
+  if (it.w) img.width = it.w;
+  if (it.h) img.height = it.h;
 
-      function el(tag, attrs = {}) {
-        const node = document.createElement(tag);
-        for (const [k, v] of Object.entries(attrs)) {
-          if (v === undefined || v === null || v === "") continue;
-          node.setAttribute(k, v);
-        }
-        return node;
-      }
+  // optional: open source in new tab with zero visual cue
+  if (it.link) {
+    const a = document.createElement("a");
+    a.href = it.link;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.appendChild(img);
+    return a;
+  }
 
-      function renderRows(rows) {
+  return img;
+}
+
+function renderRows(rows) {
   const frag = document.createDocumentFragment();
 
   for (const rowData of rows) {
     const row = document.createElement("div");
     row.className = "row";
-    row.dataset.layout = String(rowData.layout || 1);
 
     const items = Array.isArray(rowData.items) ? rowData.items : [];
+    // layout derived from data OR item count (forgives mistakes)
+    const layoutFromData = Number(rowData.layout || 0);
+    const layout = layoutFromData || Math.min(3, Math.max(1, items.length));
+    row.dataset.layout = String(layout);
+
+    // render all items in the row (if you want to HARD cap to 3, change items to items.slice(0,3))
     for (const it of items) {
-      const img = document.createElement("img");
-      img.src = it.src;
-      img.alt = it.alt || "";
-      img.loading = "lazy";
-      img.decoding = "async";
-      if (it.w) img.width = it.w;
-      if (it.h) img.height = it.h;
-      row.appendChild(img);
+      row.appendChild(createImageNode(it));
     }
 
     frag.appendChild(row);
@@ -180,50 +201,40 @@ const MAX_NODES = 300; // tune (150–500)
   grid.appendChild(frag);
 }
 
+async function loadNext() {
+  if (loading || !hasMore) return;
+  loading = true;
+  statusEl.textContent = "Loading…";
 
-while (grid.children.length > MAX_NODES) {
-  grid.removeChild(grid.firstElementChild);
+  try {
+    const res = await fetch(`/api/feed.json?page=${page}&pageSize=12`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    const rows = Array.isArray(data.rows) ? data.rows : [];
+    renderRows(rows);
+
+    hasMore = Boolean(data.hasMore);
+    page += 1;
+
+    statusEl.textContent = hasMore ? "" : "";
+  } catch (err) {
+    console.error(err);
+    statusEl.textContent = "Couldn’t load more.";
+  } finally {
+    loading = false;
+  }
 }
 
-      async function loadNext() {
-        if (loading || !hasMore) return;
-        loading = true;
-        statusEl.textContent = "Loading…";
+const io = new IntersectionObserver(
+  (entries) => {
+    if (entries.some((e) => e.isIntersecting)) loadNext();
+  },
+  { rootMargin: "800px" }
+);
 
-        try {
-          const res = await fetch(`/api/feed.json?page=${page}&pageSize=36`, { cache: "no-store" });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
-
-          renderRows(data.rows);
-         hasMore = Boolean(data.hasMore);
-
-if (hasMore) {
-  page += 1;
-  statusEl.textContent = "";
-} else {
-  // loop: start over
-  page = 1;
-  hasMore = true;
-  statusEl.textContent = "";
-}
-        } catch (err) {
-          console.error(err);
-          statusEl.textContent = "Couldn’t load more.";
-        } finally {
-          loading = false;
-        }
-      }
-
-      const io = new IntersectionObserver(
-        (entries) => {
-          if (entries.some((e) => e.isIntersecting)) loadNext();
-        },
-        { rootMargin: "800px" }
-      );
-
-      io.observe(sentinel);
-      loadNext();
+io.observe(sentinel);
+loadNext();
     </script>
   </body>
 </html>
