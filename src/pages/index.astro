@@ -1,4 +1,10 @@
 ---
+import feed from "../data/feed.json";
+const title = feed.title ?? "mood";
+const rows = Array.isArray(feed.rows) ? feed.rows : [];
+---
+
+---
 export const prerender = true;
 ---
 
